@@ -12,6 +12,7 @@ build/
 node_modules/
 .turbo/
 coverage/
+.run/
 *.pyc
 *.pyo
 *.sqlite

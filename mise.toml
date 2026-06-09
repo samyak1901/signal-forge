@@ -38,6 +38,14 @@ run = "docker compose -f infra/compose/docker-compose.yaml down"
 description = "Follow local infrastructure logs"
 run = "docker compose -f infra/compose/docker-compose.yaml logs -f"
 
+[tasks.up]
+description = "Start local infra, migrate DB, API, and web dashboard"
+run = "bash scripts/dev-up.sh"
+
+[tasks.down]
+description = "Stop local app processes and infrastructure"
+run = "bash scripts/dev-down.sh"
+
 [tasks."db:migrate"]
 description = "Apply API database migrations"
 run = "uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head"

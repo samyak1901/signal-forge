@@ -57,6 +57,20 @@ Current target phase:
 
 ## Run Locally
 
+Fast path:
+
+```sh
+mise run up
+```
+
+Stop everything:
+
+```sh
+mise run down
+```
+
+Manual path:
+
 Install dependencies:
 
 ```sh
