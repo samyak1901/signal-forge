@@ -1,0 +1,49 @@
+name: PR validation
+
+on:
+  pull_request:
+    types: [opened, edited, ready_for_review, synchronize, reopened]
+    branches: ["**"]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  merge-conflicts:
+    name: Check merge conflicts
+    runs-on: ubuntu-latest
+    if: github.event.action != 'edited'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect conflict markers
+        run: |
+          conflicts=$(git grep -l "<<<<<<<" ":(exclude).github/" 2>/dev/null || true)
+          [ -z "$conflicts" ] || { echo "Unresolved merge conflicts found:"; echo "$conflicts"; exit 1; }
+
+  semantic-pr:
+    name: Semantic PR title
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.draft != true &&
+      github.event.action != 'synchronize'
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            fix
+            feat
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          subjectPattern: ^(?![A-Z])(?=.{1,50}$).+$
+          subjectPatternError: |-
+            Subject "{subject}" must not start with uppercase and be <=50 chars.

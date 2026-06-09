@@ -6,6 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY apps/api/pyproject.toml /app/apps/api/pyproject.toml
+COPY apps/api/README.md /app/apps/api/README.md
 COPY apps/api/src /app/apps/api/src
 
 RUN pip install --no-cache-dir uv \

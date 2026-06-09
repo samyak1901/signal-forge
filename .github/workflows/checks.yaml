@@ -1,0 +1,82 @@
+name: code quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --project apps/api
+      - name: Lint
+        run: uv run --project apps/api ruff check .
+      - name: Format check
+        run: uv run --project apps/api ruff format --check .
+      - name: Type check
+        run: uv run --project apps/api ty check
+      - name: Tests
+        run: uv run --project apps/api pytest
+
+  web:
+    name: Web checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --prefix apps/web
+      - name: Lint
+        run: npm run lint --prefix apps/web
+      - name: Type check
+        run: npm run typecheck --prefix apps/web
+      - name: Build
+        run: npm run build --prefix apps/web
+
+  markdown:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Markdown lint
+        run: npx markdownlint-cli2 "**/*.md" "#**/node_modules" "#**/.venv"
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployment/images/api.Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
