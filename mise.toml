@@ -23,6 +23,7 @@ alias = "i"
 description = "Install Python and frontend dependencies"
 run = [
   "uv sync --project apps/api",
+  "npm install --prefix apps/web",
 ]
 
 [tasks.infra]
@@ -45,8 +46,7 @@ run = "uv run --project apps/api uvicorn signal_forge_api.main:app --reload --ho
 [tasks."dev:web"]
 alias = "dw"
 description = "Run the Vite React dashboard"
-dir = "apps/web"
-run = "bun run dev"
+run = "npm run dev --prefix apps/web"
 
 [tasks.checks]
 alias = "c"
@@ -55,6 +55,8 @@ run = [
   "uv run --project apps/api ruff check .",
   "uv run --project apps/api ruff format --check .",
   "uv run --project apps/api ty check",
+  "npm run lint --prefix apps/web",
+  "npm run typecheck --prefix apps/web",
 ]
 
 [tasks.tests]
@@ -68,7 +70,6 @@ description = "Verify API can start and import"
 run = "uv run --project apps/api python -c 'from signal_forge_api.main import app; print(app.title)'"
 
 [tools]
-bun = "latest"
 lefthook = "latest"
 "npm:@commitlint/cli" = "latest"
 "npm:@commitlint/config-conventional" = "latest"

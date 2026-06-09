@@ -7,7 +7,7 @@ SignalForge uses `mise` for task orchestration, `uv` for Python packages, and Do
 - Docker
 - mise
 - uv
-- Bun
+- Node.js and npm
 
 ## Commands
 
