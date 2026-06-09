@@ -16,5 +16,6 @@ coverage/
 *.pyo
 *.sqlite
 *.db
+*.tsbuildinfo
 data/
 tmp/
