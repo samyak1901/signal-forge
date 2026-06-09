@@ -55,6 +55,55 @@ Current target phase:
 - SEC ticker and filing sync
 - Initial tests and CI
 
+## Run Locally
+
+Install dependencies:
+
+```sh
+uv sync --project apps/api
+npm install --prefix apps/web
+```
+
+Start local infrastructure:
+
+```sh
+docker compose -f infra/compose/docker-compose.yaml up -d
+```
+
+Apply database migrations:
+
+```sh
+uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
+```
+
+Run the API:
+
+```sh
+uv run --project apps/api uvicorn signal_forge_api.main:app --reload
+```
+
+Run the dashboard:
+
+```sh
+npm run dev --prefix apps/web
+```
+
+Open the dashboard at `http://localhost:5173` and the API docs at `http://localhost:8000/docs`.
+
+## Phase-One API
+
+The current API supports:
+
+```txt
+GET  /health
+GET  /api/v1/companies/search?q=AAPL
+POST /api/v1/companies/{ticker}/sync
+GET  /api/v1/companies/{ticker}
+GET  /api/v1/companies/{ticker}/filings
+```
+
+The Vite dashboard uses these endpoints to search SEC company metadata, sync filing history, and display recent filings.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

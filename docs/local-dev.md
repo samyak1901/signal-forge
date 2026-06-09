@@ -14,6 +14,7 @@ SignalForge uses `mise` for task orchestration, `uv` for Python packages, and Do
 ```sh
 mise install
 mise run infra
+mise run db:migrate
 mise run dev:api
 mise run dev:web
 mise run checks
@@ -27,6 +28,17 @@ The local stack will include:
 - Postgres for metadata and research runs
 - Qdrant for vector search
 - MinIO for raw artifacts
+
+## SEC Sync Smoke Test
+
+With Postgres migrated and the API running, sync Apple filing metadata:
+
+```sh
+curl -X POST http://localhost:8000/api/v1/companies/AAPL/sync
+curl http://localhost:8000/api/v1/companies/AAPL/filings
+```
+
+The dashboard performs the same flow through the Vite proxy when you search or sync a ticker from `http://localhost:5173`.
 
 ## Environment
 

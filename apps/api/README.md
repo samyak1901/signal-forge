@@ -6,7 +6,15 @@ FastAPI backend for SignalForge. The first version owns company lookup, SEC sync
 
 ```sh
 uv sync
+uv run alembic -c alembic.ini upgrade head
 uv run uvicorn signal_forge_api.main:app --reload
+```
+
+From the repository root, use:
+
+```sh
+uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
+uv run --project apps/api uvicorn signal_forge_api.main:app --reload
 ```
 
 ## Checks
