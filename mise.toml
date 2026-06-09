@@ -38,6 +38,10 @@ run = "docker compose -f infra/compose/docker-compose.yaml down"
 description = "Follow local infrastructure logs"
 run = "docker compose -f infra/compose/docker-compose.yaml logs -f"
 
+[tasks."db:migrate"]
+description = "Apply API database migrations"
+run = "uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head"
+
 [tasks."dev:api"]
 alias = "da"
 description = "Run the FastAPI service with reload"

@@ -1,7 +1,5 @@
 """FastAPI application entrypoint."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from typing import Annotated
 
 import uvicorn
@@ -9,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from signal_forge_api.config import Settings, get_settings
-from signal_forge_api.db import create_tables, get_db
+from signal_forge_api.db import get_db
 from signal_forge_api.schemas import (
     CompanyResponse,
     CompanySearchResult,
@@ -28,18 +26,10 @@ DbSession = Annotated[Session, Depends(get_db)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
 
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Initialize phase-one application resources."""
-    create_tables()
-    yield
-
-
 app = FastAPI(
     title="SignalForge API",
     description="SEC-first backend for the SignalForge research platform.",
     version="0.1.0",
-    lifespan=lifespan,
 )
 
 
