@@ -31,7 +31,7 @@ The local stack will include:
 - Qdrant for vector search
 - MinIO for raw artifacts
 
-`mise run up` starts the infrastructure, applies migrations, starts the API, and starts the Vite dashboard. It writes process IDs and logs under `.run/`.
+`mise run up` starts the infrastructure, applies migrations, restarts the API, and restarts the Vite dashboard. It writes process IDs and logs under `.run/`.
 
 `mise run down` stops the dashboard, stops the API, and shuts down the Docker Compose stack. Logs remain under `.run/logs/` for inspection.
 

@@ -19,6 +19,34 @@ is_running() {
   [[ -f "$pid_file" ]] && kill -0 "$(cat "$pid_file")" 2>/dev/null
 }
 
+stop_if_running() {
+  local pid_file="$1"
+  local label="$2"
+
+  if ! is_running "$pid_file"; then
+    rm -f "$pid_file"
+    return 0
+  fi
+
+  local pid
+  pid="$(cat "$pid_file")"
+  printf 'Restarting %s on PID %s...\n' "$label" "$pid"
+  kill "$pid" 2>/dev/null || true
+
+  for _ in $(seq 1 20); do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      break
+    fi
+    sleep 0.25
+  done
+
+  if kill -0 "$pid" 2>/dev/null; then
+    kill -9 "$pid" 2>/dev/null || true
+  fi
+
+  rm -f "$pid_file"
+}
+
 wait_for_http() {
   local url="$1"
   local label="$2"
@@ -46,26 +74,20 @@ npm install --prefix apps/web >/dev/null
 printf 'Applying database migrations...\n'
 uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
 
-if is_running "$API_PID_FILE"; then
-  printf 'API already running on PID %s\n' "$(cat "$API_PID_FILE")"
-else
-  printf 'Starting API on http://localhost:8000...\n'
-  uv run --project apps/api uvicorn signal_forge_api.main:app \
-    --host 0.0.0.0 \
-    --port 8000 \
-    >"$LOG_DIR/api.log" 2>&1 &
-  printf '%s' "$!" >"$API_PID_FILE"
-fi
+stop_if_running "$API_PID_FILE" "API"
+printf 'Starting API on http://localhost:8000...\n'
+uv run --project apps/api uvicorn signal_forge_api.main:app \
+  --host 0.0.0.0 \
+  --port 8000 \
+  >"$LOG_DIR/api.log" 2>&1 &
+printf '%s' "$!" >"$API_PID_FILE"
 
 wait_for_http "http://localhost:8000/health" "API"
 
-if is_running "$WEB_PID_FILE"; then
-  printf 'Web dashboard already running on PID %s\n' "$(cat "$WEB_PID_FILE")"
-else
-  printf 'Starting web dashboard on http://localhost:5173...\n'
-  npm run dev --prefix apps/web >"$LOG_DIR/web.log" 2>&1 &
-  printf '%s' "$!" >"$WEB_PID_FILE"
-fi
+stop_if_running "$WEB_PID_FILE" "web dashboard"
+printf 'Starting web dashboard on http://localhost:5173...\n'
+npm run dev --prefix apps/web >"$LOG_DIR/web.log" 2>&1 &
+printf '%s' "$!" >"$WEB_PID_FILE"
 
 wait_for_http "http://localhost:5173" "Web dashboard"
 
