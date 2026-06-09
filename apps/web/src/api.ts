@@ -28,6 +28,17 @@ export interface Filing {
   primary_document: string | null;
   primary_doc_description: string | null;
   source_url: string | null;
+  artifact: FilingArtifact | null;
+}
+
+export interface FilingArtifact {
+  id: number;
+  object_key: string;
+  source_url: string;
+  content_type: string | null;
+  byte_size: number;
+  sha256: string;
+  downloaded_at: string;
 }
 
 export interface CompanySyncResponse {
@@ -60,4 +71,10 @@ export function syncCompany(ticker: string): Promise<CompanySyncResponse> {
 
 export function getCompanyFilings(ticker: string): Promise<Filing[]> {
   return request<Filing[]>(`/api/v1/companies/${ticker}/filings`);
+}
+
+export function downloadFilingArtifact(ticker: string, filingId: number): Promise<FilingArtifact> {
+  return request<FilingArtifact>(`/api/v1/companies/${ticker}/filings/${filingId}/download`, {
+    method: "POST",
+  });
 }

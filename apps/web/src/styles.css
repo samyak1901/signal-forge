@@ -232,8 +232,9 @@ button {
 .filings-header,
 .filing-row {
   display: grid;
-  grid-template-columns: 0.35fr 0.55fr 1fr;
+  grid-template-columns: 0.3fr 0.45fr 1fr 0.55fr;
   gap: 12px;
+  align-items: center;
   padding: 12px 14px;
 }
 
@@ -247,11 +248,31 @@ button {
 
 .filing-row {
   color: #cbd5e1;
-  text-decoration: none;
 }
 
 .filing-row:hover {
   border-color: rgba(125, 211, 252, 0.44);
+}
+
+.filing-row a {
+  color: #e0f2fe;
+  text-decoration: none;
+}
+
+.artifact-cell button {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+}
+
+.artifact-pill {
+  display: inline-flex;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.1);
+  font-size: 0.84rem;
 }
 
 .chips {

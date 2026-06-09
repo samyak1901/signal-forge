@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { Company, CompanySearchResult, Filing } from "../api";
-import { getCompanyFilings, searchCompanies, syncCompany } from "../api";
+import { downloadFilingArtifact, getCompanyFilings, searchCompanies, syncCompany } from "../api";
 
 const pipelineSteps = [
   "Resolve ticker to CIK",
@@ -21,6 +21,16 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong";
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function App() {
   const [query, setQuery] = useState("AAPL");
   const [matches, setMatches] = useState<CompanySearchResult[]>([]);
@@ -29,6 +39,7 @@ export function App() {
   const [status, setStatus] = useState("Ready to sync SEC filing metadata.");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [downloadingFilingId, setDownloadingFilingId] = useState<number | null>(null);
 
   async function handleSearch() {
     const normalized = query.trim().toUpperCase();
@@ -74,6 +85,27 @@ export function App() {
       setStatus("Sync failed.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleDownloadFiling(filing: Filing) {
+    if (!company) {
+      return;
+    }
+
+    setDownloadingFilingId(filing.id);
+    setError(null);
+    setStatus(`Downloading ${filing.form} ${filing.filing_date ?? "filing"} into MinIO...`);
+    try {
+      const artifact = await downloadFilingArtifact(company.ticker, filing.id);
+      const refreshedFilings = await getCompanyFilings(company.ticker);
+      setFilings(refreshedFilings);
+      setStatus(`Stored raw filing artifact: ${artifact.object_key}`);
+    } catch (caught) {
+      setError(getErrorMessage(caught));
+      setStatus("Filing download failed.");
+    } finally {
+      setDownloadingFilingId(null);
     }
   }
 
@@ -161,19 +193,37 @@ export function App() {
                 <span>Form</span>
                 <span>Filed</span>
                 <span>Document</span>
+                <span>Artifact</span>
               </div>
               {filings.slice(0, 12).map((filing) => (
-                <a
-                  className="filing-row"
-                  href={filing.source_url ?? undefined}
-                  key={filing.id}
-                  rel="noreferrer"
-                  target="_blank"
-                >
+                <div className="filing-row" key={filing.id}>
                   <span>{filing.form}</span>
                   <span>{filing.filing_date ?? "Unknown"}</span>
-                  <span>{filing.primary_document ?? filing.accession_number}</span>
-                </a>
+                  <span>
+                    {filing.source_url ? (
+                      <a href={filing.source_url} rel="noreferrer" target="_blank">
+                        {filing.primary_document ?? filing.accession_number}
+                      </a>
+                    ) : (
+                      (filing.primary_document ?? filing.accession_number)
+                    )}
+                  </span>
+                  <span className="artifact-cell">
+                    {filing.artifact ? (
+                      <span className="artifact-pill" title={filing.artifact.sha256}>
+                        Stored · {formatBytes(filing.artifact.byte_size)}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={downloadingFilingId === filing.id}
+                        onClick={() => void handleDownloadFiling(filing)}
+                      >
+                        {downloadingFilingId === filing.id ? "Downloading..." : "Store Raw"}
+                      </button>
+                    )}
+                  </span>
+                </div>
               ))}
             </section>
           ) : null}
