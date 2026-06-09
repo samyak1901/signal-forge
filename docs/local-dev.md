@@ -9,7 +9,7 @@ SignalForge uses `mise` for task orchestration, `uv` for Python packages, and Do
 - uv
 - Bun
 
-## Planned Commands
+## Commands
 
 ```sh
 mise install
@@ -31,3 +31,5 @@ The local stack will include:
 ## Environment
 
 Configuration should be copied from `.env.example` once application services are added. Secrets must not be committed.
+
+The SEC requires a declared `SEC_USER_AGENT`. Replace the example value with a useful project/contact string before making sustained requests.

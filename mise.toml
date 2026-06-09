@@ -1,0 +1,78 @@
+[env]
+_.python.venv = { create = true, path = ".venv" }
+API_HOST = "0.0.0.0"
+API_PORT = "8000"
+DATABASE_URL = "postgresql+psycopg://signal_forge:signal_forge@localhost:5432/signal_forge"
+MINIO_ACCESS_KEY = "minioadmin"
+MINIO_BUCKET = "signal-forge"
+MINIO_ENDPOINT = "http://localhost:9000"
+MINIO_SECRET_KEY = "minioadmin"
+QDRANT_URL = "http://localhost:6333"
+SEC_BASE_URL = "https://www.sec.gov"
+SEC_DATA_URL = "https://data.sec.gov"
+SEC_USER_AGENT = "SignalForge samyak1901@gmail.com"
+
+[settings]
+python.uv_venv_auto = true
+
+[shell_alias]
+mr = "mise run"
+
+[tasks.install]
+alias = "i"
+description = "Install Python and frontend dependencies"
+run = [
+  "uv sync --project apps/api",
+]
+
+[tasks.infra]
+description = "Start local Postgres, Qdrant, and MinIO"
+run = "docker compose -f infra/compose/docker-compose.yaml up -d"
+
+[tasks."infra:down"]
+description = "Stop local infrastructure"
+run = "docker compose -f infra/compose/docker-compose.yaml down"
+
+[tasks."infra:logs"]
+description = "Follow local infrastructure logs"
+run = "docker compose -f infra/compose/docker-compose.yaml logs -f"
+
+[tasks."dev:api"]
+alias = "da"
+description = "Run the FastAPI service with reload"
+run = "uv run --project apps/api uvicorn signal_forge_api.main:app --reload --host $API_HOST --port $API_PORT"
+
+[tasks."dev:web"]
+alias = "dw"
+description = "Run the Vite React dashboard"
+dir = "apps/web"
+run = "bun run dev"
+
+[tasks.checks]
+alias = "c"
+description = "Run repository checks"
+run = [
+  "uv run --project apps/api ruff check .",
+  "uv run --project apps/api ruff format --check .",
+  "uv run --project apps/api ty check",
+]
+
+[tasks.tests]
+alias = "t"
+description = "Run test suite"
+run = "uv run --project apps/api pytest"
+
+[tasks.verify]
+alias = "v"
+description = "Verify API can start and import"
+run = "uv run --project apps/api python -c 'from signal_forge_api.main import app; print(app.title)'"
+
+[tools]
+bun = "latest"
+lefthook = "latest"
+"npm:@commitlint/cli" = "latest"
+"npm:@commitlint/config-conventional" = "latest"
+"npm:eclint" = "latest"
+"npm:markdownlint-cli2" = "latest"
+python = "3.12"
+uv = "latest"
