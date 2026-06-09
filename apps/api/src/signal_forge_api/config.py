@@ -17,6 +17,10 @@ class Settings(BaseSettings):
         description="Declared SEC User-Agent. Replace for sustained usage.",
     )
     sec_timeout_seconds: float = 30.0
+    minio_endpoint: str = "http://localhost:9000"
+    minio_access_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin"
+    minio_bucket: str = "signal-forge"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

@@ -1,10 +1,14 @@
 """Application services."""
 
+from datetime import UTC, datetime
+from hashlib import sha256
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from signal_forge_api.config import Settings
-from signal_forge_api.models import Company, Filing
+from signal_forge_api.models import Company, Filing, FilingArtifact
+from signal_forge_api.object_store import ObjectStore, get_object_store
 from signal_forge_api.sec_client import SecClient, SecCompany, SecFiling
 
 
@@ -63,6 +67,55 @@ def list_company_filings(ticker: str, db: Session) -> list[Filing] | None:
     )
 
 
+def get_company_filing(ticker: str, filing_id: int, db: Session) -> Filing | None:
+    """Return a single filing for a synced company."""
+    company = get_company_by_ticker(ticker, db)
+    if company is None:
+        return None
+    return db.scalar(select(Filing).where(Filing.company_id == company.id, Filing.id == filing_id))
+
+
+def download_filing_artifact(
+    ticker: str,
+    filing_id: int,
+    db: Session,
+    settings: Settings,
+    object_store: ObjectStore | None = None,
+) -> FilingArtifact | None:
+    """Download a filing's primary document into object storage."""
+    filing = get_company_filing(ticker, filing_id, db)
+    if filing is None:
+        return None
+    existing_artifact = db.scalar(
+        select(FilingArtifact).where(FilingArtifact.filing_id == filing.id)
+    )
+    if existing_artifact is not None:
+        return existing_artifact
+    if not filing.source_url:
+        msg = f"Filing {filing_id} has no source URL"
+        raise ValueError(msg)
+
+    sec_document = get_sec_client(settings).fetch_document(filing.source_url)
+    digest = sha256(sec_document.content).hexdigest()
+    object_key = _filing_object_key(filing)
+    store = object_store or get_object_store(settings)
+    store.put_bytes(object_key, sec_document.content, sec_document.content_type)
+
+    artifact = FilingArtifact(
+        filing_id=filing.id,
+        object_key=object_key,
+        source_url=filing.source_url,
+        content_type=sec_document.content_type,
+        byte_size=len(sec_document.content),
+        sha256=digest,
+        downloaded_at=datetime.now(UTC),
+    )
+    db.add(artifact)
+    db.commit()
+    db.refresh(artifact)
+    return artifact
+
+
 def _upsert_company(
     db: Session, sec_company: SecCompany, submissions: dict[str, object]
 ) -> Company:
@@ -111,3 +164,10 @@ def _optional_string(value: object) -> str | None:
     if value is None or value == "":
         return None
     return str(value)
+
+
+def _filing_object_key(filing: Filing) -> str:
+    company = filing.company
+    document = filing.primary_document or f"{filing.accession_number}.txt"
+    accession = filing.accession_number.replace("-", "")
+    return f"sec/{company.ticker}/{filing.form}/{accession}/{document}"

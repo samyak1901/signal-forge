@@ -12,11 +12,14 @@ from signal_forge_api.schemas import (
     CompanyResponse,
     CompanySearchResult,
     CompanySyncResponse,
+    FilingArtifactResponse,
     FilingResponse,
     HealthResponse,
 )
 from signal_forge_api.services import (
+    download_filing_artifact,
     get_company_by_ticker,
+    get_company_filing,
     list_company_filings,
     search_sec_companies,
     sync_company_from_sec,
@@ -86,6 +89,40 @@ def get_company_filings(ticker: str, db: DbSession) -> list[FilingResponse]:
     if filings is None:
         raise HTTPException(status_code=404, detail=f"Company {ticker.upper()} has not been synced")
     return [FilingResponse.model_validate(filing) for filing in filings]
+
+
+@app.get(
+    "/api/v1/companies/{ticker}/filings/{filing_id}",
+    response_model=FilingResponse,
+    tags=["filings"],
+)
+def get_company_filing_detail(ticker: str, filing_id: int, db: DbSession) -> FilingResponse:
+    """Return a filing detail record with artifact status."""
+    filing = get_company_filing(ticker, filing_id, db)
+    if filing is None:
+        raise HTTPException(status_code=404, detail="Filing not found")
+    return FilingResponse.model_validate(filing)
+
+
+@app.post(
+    "/api/v1/companies/{ticker}/filings/{filing_id}/download",
+    response_model=FilingArtifactResponse,
+    tags=["filings"],
+)
+def download_company_filing(
+    ticker: str,
+    filing_id: int,
+    db: DbSession,
+    settings: AppSettings,
+) -> FilingArtifactResponse:
+    """Download and store a filing's primary SEC document."""
+    try:
+        artifact = download_filing_artifact(ticker, filing_id, db, settings)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if artifact is None:
+        raise HTTPException(status_code=404, detail="Filing not found")
+    return FilingArtifactResponse.model_validate(artifact)
 
 
 def main() -> None:

@@ -8,6 +8,14 @@ import httpx
 
 
 @dataclass(frozen=True)
+class SecDocument:
+    """Downloaded SEC document bytes and response metadata."""
+
+    content: bytes
+    content_type: str | None
+
+
+@dataclass(frozen=True)
 class SecCompany:
     """Company metadata from SEC ticker mapping files."""
 
@@ -115,6 +123,18 @@ class SecClient:
     def fetch_company_facts(self, cik_padded: str) -> dict[str, Any]:
         """Fetch XBRL company facts for a padded CIK."""
         return self._get_json(f"{self._data_url}/api/xbrl/companyfacts/CIK{cik_padded}.json")
+
+    def fetch_document(self, url: str) -> SecDocument:
+        """Fetch a raw SEC filing document."""
+        with httpx.Client(
+            headers=self._headers, timeout=self._timeout, follow_redirects=True
+        ) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            return SecDocument(
+                content=response.content,
+                content_type=response.headers.get("content-type"),
+            )
 
     def build_filing_url(
         self, cik: int, accession_number: str, primary_document: str | None

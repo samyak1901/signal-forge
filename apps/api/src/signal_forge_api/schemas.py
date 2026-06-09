@@ -50,6 +50,21 @@ class FilingResponse(BaseModel):
     primary_document: str | None
     primary_doc_description: str | None
     source_url: str | None
+    artifact: "FilingArtifactResponse | None" = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FilingArtifactResponse(BaseModel):
+    """Stored raw filing artifact response."""
+
+    id: int
+    object_key: str
+    source_url: str
+    content_type: str | None
+    byte_size: int
+    sha256: str
+    downloaded_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

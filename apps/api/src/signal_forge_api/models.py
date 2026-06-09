@@ -2,7 +2,7 @@
 
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from signal_forge_api.db import Base
@@ -56,3 +56,31 @@ class Filing(Base):
     )
 
     company: Mapped[Company] = relationship(back_populates="filings")
+    artifact: Mapped["FilingArtifact | None"] = relationship(
+        back_populates="filing", cascade="all, delete-orphan"
+    )
+
+
+class FilingArtifact(Base):
+    """Raw filing artifact stored in object storage."""
+
+    __tablename__ = "filing_artifacts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    filing_id: Mapped[int] = mapped_column(ForeignKey("filings.id"), unique=True, index=True)
+    object_key: Mapped[str] = mapped_column(String(1024), unique=True)
+    source_url: Mapped[str] = mapped_column(String(1024))
+    content_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    byte_size: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64), index=True)
+    downloaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=func.now()
+    )
+
+    filing: Mapped[Filing] = relationship(back_populates="artifact")
