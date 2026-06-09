@@ -89,6 +89,11 @@ button {
   text-decoration: none;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .docs-link {
   padding: 10px 16px;
 }
@@ -139,6 +144,37 @@ button {
   margin: 18px 0 0;
 }
 
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.action-row button {
+  padding: 10px 14px;
+}
+
+.error {
+  color: #fecdd3;
+}
+
+.matches {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.matches button {
+  width: 100%;
+  border-radius: 16px;
+  text-align: left;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -168,6 +204,56 @@ button {
   color: #38bdf8;
 }
 
+.company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.company-grid span,
+.filings-header,
+.filing-row {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.company-grid span {
+  padding: 14px;
+  color: #cbd5e1;
+}
+
+.filings-table {
+  display: grid;
+  gap: 8px;
+}
+
+.filings-header,
+.filing-row {
+  display: grid;
+  grid-template-columns: 0.35fr 0.55fr 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.filings-header {
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.filing-row {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.filing-row:hover {
+  border-color: rgba(125, 211, 252, 0.44);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -195,8 +281,16 @@ button {
   }
 
   .topbar,
-  .ticker-row {
+  .ticker-row,
+  .company-grid,
+  .filings-header,
+  .filing-row {
     grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .topbar {
