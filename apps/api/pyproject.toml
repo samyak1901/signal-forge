@@ -1,0 +1,70 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[dependency-groups]
+dev = [
+  "pytest>=9.0.0",
+  "pytest-httpx>=0.35.0",
+  "ruff>=0.14.0",
+  "ty>=0.0.14",
+]
+
+[project]
+dependencies = [
+  "fastapi[standard]>=0.124.0",
+  "httpx>=0.28.0",
+  "psycopg[binary]>=3.3.0",
+  "pydantic>=2.12.0",
+  "pydantic-settings>=2.12.0",
+  "sqlalchemy>=2.0.45",
+]
+description = "FastAPI backend for the SignalForge research platform"
+name = "signal-forge-api"
+readme = "README.md"
+requires-python = ">=3.12"
+version = "0.1.0"
+
+[project.scripts]
+signal-forge-api = "signal_forge_api.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/signal_forge_api"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+indent-width = 4
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.format]
+docstring-code-format = true
+indent-style = "space"
+line-ending = "lf"
+quote-style = "double"
+
+[tool.ruff.lint]
+select = [
+  "B",
+  "C90",
+  "D",
+  "E",
+  "F",
+  "I",
+  "PL",
+  "SIM",
+  "UP",
+]
+ignore = ["D100", "D104"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D", "PLR2004"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ty.src]
+include = ["src", "tests"]
