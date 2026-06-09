@@ -114,9 +114,24 @@ GET  /api/v1/companies/search?q=AAPL
 POST /api/v1/companies/{ticker}/sync
 GET  /api/v1/companies/{ticker}
 GET  /api/v1/companies/{ticker}/filings
+GET  /api/v1/companies/{ticker}/filings/{filing_id}
+POST /api/v1/companies/{ticker}/filings/{filing_id}/download
 ```
 
-The Vite dashboard uses these endpoints to search SEC company metadata, sync filing history, and display recent filings.
+The Vite dashboard uses these endpoints to search SEC company metadata, sync filing history, display recent filings, and store raw filing artifacts in MinIO.
+
+## Current Complete Flow
+
+The current repo is complete for the first SEC metadata and raw artifact slice:
+
+1. Search a ticker against SEC company metadata.
+2. Sync company and recent filing metadata into Postgres.
+3. Display filings in the Vite dashboard.
+4. Open the original SEC filing source URL.
+5. Store a raw filing document in MinIO.
+6. Persist artifact metadata, content type, byte size, SHA-256, and object key.
+
+This deliberately stops before text extraction, chunking, embeddings, and RAG. Those are the next phase.
 
 ## License
 

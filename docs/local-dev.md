@@ -46,6 +46,14 @@ curl http://localhost:8000/api/v1/companies/AAPL/filings
 
 The dashboard performs the same flow through the Vite proxy when you search or sync a ticker from `http://localhost:5173`.
 
+To store a raw SEC filing artifact, take one `id` from the filings response and run:
+
+```sh
+curl -X POST http://localhost:8000/api/v1/companies/AAPL/filings/{filing_id}/download
+```
+
+The API downloads the SEC primary document, stores it in MinIO under the `signal-forge` bucket, and records the object key, content type, byte size, SHA-256 hash, and download timestamp in Postgres.
+
 ## Environment
 
 Configuration should be copied from `.env.example` once application services are added. Secrets must not be committed.
